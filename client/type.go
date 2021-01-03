@@ -5489,6 +5489,35 @@ func (*MessageReplyInfo) GetType() string {
 	return TypeMessageReplyInfo
 }
 
+func (info *MessageReplyInfo) UnmarshalJSON(data []byte) error {
+	var tmp struct {
+		ReplyCount              int32             `json:"reply_count"`
+		RecentRepliers          []json.RawMessage `json:"recent_repliers"`
+		LastReadInboxMessageId  int64             `json:"last_read_inbox_message_id"`
+		LastReadOutboxMessageId int64             `json:"last_read_outbox_message_id"`
+		LastMessageId           int64             `json:"last_message_id"`
+	}
+
+	err := json.Unmarshal(data, &tmp)
+	if err != nil {
+		return err
+	}
+
+	info.ReplyCount = tmp.ReplyCount
+	info.LastReadInboxMessageId = tmp.LastReadInboxMessageId
+	info.LastReadOutboxMessageId = tmp.LastReadOutboxMessageId
+	info.LastMessageId = tmp.LastMessageId
+
+	var fieldRecentRepliers []MessageSender
+	for _, r := range tmp.RecentRepliers {
+		ms, _ := UnmarshalMessageSender(r)
+		fieldRecentRepliers = append(fieldRecentRepliers, ms)
+	}
+	info.RecentRepliers = fieldRecentRepliers
+
+	return nil
+}
+
 // Contains information about interactions with a message
 type MessageInteractionInfo struct {
 	meta
